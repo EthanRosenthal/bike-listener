@@ -1,7 +1,7 @@
 #!/home/ubuntu/miniconda2/bin/python
 """
-Setup a loop to get citi bike station data every 2 minutes and store in a
-postgresql database
+Grab the current status of every citibike station. This script is to be run
+on a cron for periodic station tracking.
 """
 
 import pandas as pd
