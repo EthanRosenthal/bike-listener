@@ -1,0 +1,6 @@
+API_URL: 'http://www.citibikenyc.com/stations/json'
+DB_NAME: 'stations'
+USER: 'postgres'
+PWD: 'citi'
+TABLE: 'status'
+DB_TYPE: 'postgresql'
