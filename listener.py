@@ -1,7 +1,15 @@
 #!/home/ubuntu/miniconda2/bin/python
 """
-Grab the current status of every citibike station. This script is to be run
-on a cron for periodic station tracking.
+Grab the current status of every citibike station.
+
+I set this up on an ec2 instance using the miniconda python distribution
+(hence the shebang at the top)
+
+Below is the crontab that I used for running this every 2 minutes:
+
+*/2 * * * * /home/ubuntu/bike-listener/listener.py /home/ubuntu/bike-listener/config.yml
+
+Also, make sure listener.py is executable (chmod +x listener.py)
 """
 
 import argparse
