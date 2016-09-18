@@ -134,7 +134,7 @@ def write_status(api_url, engine, table):
                  'test_station',
                  'total_docks']
 
-    print '{}: write_status()'.format(time.ctime())
+    logging.info('{}: write_status()'.format(time.ctime()))
 
     try:
         df, status = get_status(api_url)
