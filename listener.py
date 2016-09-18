@@ -13,6 +13,7 @@ import time
 import numpy as np
 import psycopg2
 import yaml
+import sys
 
 LOG_FILENAME = 'listener.log'
 logging.basicConfig(filename=LOG_FILENAME,
@@ -32,6 +33,8 @@ def load_config(conf_file):
     TABLE = config['TABLE']
     global DB_TYPE
     DB_TYPE = config['DB_TYPE']
+    global API_URL
+    API_URL = config['API_URL']
 
 def mapColumns(cols, col_map):
     """
@@ -104,8 +107,7 @@ def write_status(api_url, engine, table):
     """
 
     query = 'SELECT COALESCE(max(index),0)+1 FROM status'
-    col_map = {'index':'index',
-               'executionTime':'execution_time',
+    col_map = {'executionTime':'execution_time',
                'availableBikes':'available_bikes',
                'availableDocks':'available_docks',
                'id':'id',
@@ -118,8 +120,7 @@ def write_status(api_url, engine, table):
                'statusValue':'status_value',
                'testStation':'test_station',
                'totalDocks':'total_docks'}
-    post_cols = ['index',
-                 'execution_time',
+    post_cols = ['execution_time',
                  'available_bikes',
                  'available_docks',
                  'id',
@@ -133,7 +134,7 @@ def write_status(api_url, engine, table):
                  'test_station',
                  'total_docks']
 
-    print '{}: write_status()'.format(time.ctime())
+    logging.info('{}: write_status()'.format(time.ctime()))
 
     try:
         df, status = get_status(api_url)
@@ -141,8 +142,6 @@ def write_status(api_url, engine, table):
             logging.error('Error: bad request at : {}'.format(time.ctime()))
         else:
             df.columns = mapColumns(df.columns.tolist(), col_map)
-            df['index'] = pd.read_sql_query(query, engine).iloc[0,0] + \
-                          range(len(df))
             df[post_cols].to_sql(table,
                                  engine,
                                  if_exists='append',
@@ -156,7 +155,6 @@ def create_table(db, user, pwd, table):
     conn = psycopg2.connect(dbname=db, user=user, password=pwd, host='*')
     query = """
             CREATE TABLE {table} (
-            index bigserial NOT NULL,
             execution_time TIMESTAMP,
             available_bikes SMALLINT,
             available_docks SMALLINT,
@@ -174,6 +172,11 @@ def create_table(db, user, pwd, table):
             """.format(**{'table':table})
     cur = conn.cursor()
     cur.execute(query)
+    conn.commit()
+    cur.close()
+
+    query = 'CREATE INDEX idx ON {table}(id, execution_time);'
+    cur.execute(query.format(**{'table': table}))
     conn.commit()
     cur.close()
     conn.close()
