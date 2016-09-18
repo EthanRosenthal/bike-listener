@@ -4,20 +4,22 @@ Grab the current status of every citibike station. This script is to be run
 on a cron for periodic station tracking.
 """
 
-import pandas as pd
+import argparse
 import json
 import requests
 import logging
-from sqlalchemy import create_engine
 import time
-import numpy as np
-import psycopg2
-import yaml
 import sys
 
-LOG_FILENAME = 'listener.log'
+from sqlalchemy import create_engine
+import numpy as np
+import pandas as pd
+import psycopg2
+import yaml
+
+LOG_FILENAME =  os.path.join(os.path.curdir, 'listener.log')
 logging.basicConfig(filename=LOG_FILENAME,
-                    level=logging.ERROR)
+                    level=logging.INFO)
 
 def load_config(conf_file):
     """Load database configuration file as global variables"""
@@ -174,16 +176,18 @@ def create_table(db, user, pwd, table):
     cur.execute(query)
     conn.commit()
     cur.close()
-
-    query = 'CREATE INDEX idx ON {table}(id, execution_time);'
-    cur.execute(query.format(**{'table': table}))
-    conn.commit()
-    cur.close()
     conn.close()
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='Citibike listener')
+    parser.add_argument('config', help='config file with DB and API params')
+    parser.add_argument('--create', action='store_true',
+                        help='Whether or not to create a database table first.')
+    args = parser.parse_args()
 
-    load_config(sys.argv[1])
+    load_config(args.config)
+    if args.create:
+        create_table(DB_NAME, USER, PWD, TABLE)
 
     engine_str = '{}://{}:{}@localhost/{}'.format(DB_TYPE, USER, PWD, DB_NAME)
     engine = create_engine(engine_str)
